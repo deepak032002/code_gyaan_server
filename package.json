@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
-    "build": "yarn && npx tsc",
+    "build": "NODE_VERSION=16.19.1 yarn && npx tsc",
     "build:start": "NODE_ENV=production node build/src/index.js",
     "start": "NODE_ENV=production ts-node src/index.ts",
     "dev": "NODE_ENV=development nodemon src/index.ts",
