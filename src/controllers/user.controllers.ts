@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import User from "../db/models/user.model";
 import jwt from "jsonwebtoken";
-const JWT_SECRET = process.env.SECREAT_PHRASE || "";
+const JWT_SECRET = process.env.SECREAT_PHRASE as string;
 
 export const userGet = async (req: Request, res: Response) => {
   try {
@@ -18,7 +18,6 @@ export const userGet = async (req: Request, res: Response) => {
 export const signup = async (req: Request, res: Response) => {
   try {
     const { name, email, mobile, password } = req.body;
-
     const isEmailExist = await User.findOne({ where: { email: email } });
 
     if (isEmailExist)
@@ -31,7 +30,7 @@ export const signup = async (req: Request, res: Response) => {
       email,
       mobile,
       password,
-      avtar: req.file,
+      avtar: req.file?.path,
     };
 
     let userdata = new User(obj);
@@ -68,13 +67,15 @@ export const login = async (req: Request, res: Response) => {
         .status(404)
         .send({ message: "Wrong credentials!", success: false });
 
-    console.log(userData);
+    const token = jwt.sign({ id: userData.id }, JWT_SECRET);
 
-    const token = jwt.sign(
-      { id: userData.id, role: userData.role },
-      JWT_SECRET
-    );
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+    });
 
     res.status(200).send({ message: "Successfully logged in!", token });
-  } catch (error) {}
+  } catch (error) {
+    res.status(500).send({ message: "Something went wrong!", error });
+  }
 };

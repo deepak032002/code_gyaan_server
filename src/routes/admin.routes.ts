@@ -6,4 +6,8 @@ const router = Router();
 
 router.route("/login").post(login);
 
+
+router.route('/upload')
+router.route('getResource/:type')
+
 export default router;

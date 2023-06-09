@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Blog from "../db/models/blog.model";
 import Comment from "../db/models/comment.model";
-import { ObjectId } from "mongoose";
 
 const getBlogs = async (req: Request, res: Response) => {
   try {
@@ -27,8 +26,12 @@ const getBlogs = async (req: Request, res: Response) => {
 const postBlog = async (req: Request, res: Response) => {
   try {
     let tags: string[] = ["64310980a8aad559ca474641"];
+
     const { title, content, description, meta_title, meta_description } =
       req.body;
+
+    if (content) {
+    }
 
     const blog = new Blog({
       title,
@@ -37,7 +40,7 @@ const postBlog = async (req: Request, res: Response) => {
       tags,
       meta_title,
       meta_description,
-      banner: req.file,
+      banner: req.file?.path,
       author: req.user.id,
     });
 
@@ -158,4 +161,20 @@ const comment = async (req: Request, res: Response) => {
   }
 };
 
-export { getBlogs, postBlog, patchBlog, deleteBlog, getBlogBySlug, comment };
+const uploadImageController = async (req: Request, res: Response) => {
+  try {
+    return res.status(200).send({ message: "Success", url: req.file?.path });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send("Something went wrong!");
+  }
+};
+export {
+  getBlogs,
+  postBlog,
+  patchBlog,
+  deleteBlog,
+  getBlogBySlug,
+  comment,
+  uploadImageController,
+};

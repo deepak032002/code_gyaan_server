@@ -1,5 +1,4 @@
 import { Router } from "express";
-import multer from "multer";
 import {
   getBlogs,
   postBlog,
@@ -7,22 +6,21 @@ import {
   deleteBlog,
   getBlogBySlug,
   comment,
+  uploadImageController,
 } from "../controllers/blog.controller";
-import { uploadImage, validate, verifyRole, verifyToken } from "../middlewares";
+import { upload, validate, verifyRole, verifyToken } from "../middlewares";
 import { blogValidateSchema } from "../utils/joi.schema";
 
 const router = Router();
-
-router.use(multer().single("banner"));
 
 router
   .route("/")
   .get(getBlogs)
   .post(
+    upload.single("banner"),
     verifyToken,
     verifyRole("writer", "admin"),
     validate(blogValidateSchema),
-    uploadImage,
     postBlog
   );
 
@@ -37,6 +35,14 @@ router
   )
   .delete(verifyToken, verifyRole("writer", "admin"), deleteBlog)
   .get(getBlogBySlug);
+
+router
+  .route("/upload-image")
+  .post(
+    verifyToken,
+    upload.single("upload"),
+    uploadImageController
+  );
 
 router.route("/comment").post(verifyToken, comment);
 

@@ -1,35 +1,21 @@
 import { v2 as cloudinary } from "cloudinary";
-import streamifier from "streamifier";
-import { NextFunction, Request, Response } from "express";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import multer from "multer";
 
 cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET,
+  cloud_name: process.env.CLOUD_NAME as string,
+  api_key: process.env.API_KEY as string,
+  api_secret: process.env.API_SECRET as string,
 });
 
-let uploadImage = async (req: Request, res: Response, next: NextFunction) => {
-  if (!req.file)
-    return res
-      .status(400)
-      .send({ success: false, message: "[image] is required!" });
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "code_gyaan",
+    public_id: (req, file) => "",
+  },
+});
 
-  const promise = new Promise((resolve, reject) => {
-    let stream = cloudinary.uploader.upload_stream((error, result) => {
-      if (result) {
-        resolve(result);
-      } else {
-        reject(error);
-      }
-    });
-    streamifier.createReadStream(req.file!.buffer).pipe(stream);
-  });
+const upload = multer({ storage: storage });
 
-  const { secure_url }: any = await promise;
-
-  if (!secure_url) return res.status(400).send("Some problem occured!");
-  req.file = secure_url;
-  next();
-};
-
-export default uploadImage;
+export default upload;
