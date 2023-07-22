@@ -1,28 +1,16 @@
-import { NextFunction, Request, Response } from "express";
-import { JwtPayload } from "jsonwebtoken";
-
-declare global {
-  namespace Express {
-    interface Request {
-      user: any | JwtPayload;
-    }
-  }
-}
+import { NextFunction, Request, Response } from 'express'
+import { AuthenticatedRequest } from '../types/express'
 
 const verifyRole =
   (...roles: string[]) =>
   (req: Request, res: Response, next: NextFunction) => {
-    const { role } = req.user;
-    console.log(req.user);
-    
-    
+    const { role } = (req as AuthenticatedRequest).user
+
     if (!roles.includes(role)) {
-      return res
-        .status(403)
-        .json({ success: false, message: "You are not authorized" });
+      return res.status(403).json({ success: false, message: 'You are not authorized' })
     }
 
-    next();
-  };
+    next()
+  }
 
-export default verifyRole;
+export default verifyRole

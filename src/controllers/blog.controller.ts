@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Blog from "../db/models/blog.model";
 import Comment from "../db/models/comment.model";
+import { AuthenticatedRequest } from "../types/express";
 
 const getBlogs = async (req: Request, res: Response) => {
   try {
@@ -41,7 +42,7 @@ const postBlog = async (req: Request, res: Response) => {
       meta_title,
       meta_description,
       banner: req.file?.path,
-      author: req.user.id,
+      author: (req as AuthenticatedRequest).user.id,
     });
 
     const isUnique = await blog.isTitleUnique(title);
@@ -143,7 +144,7 @@ const comment = async (req: Request, res: Response) => {
 
     const comment = new Comment({
       content,
-      user: req.user.id,
+      user: (req as AuthenticatedRequest).user.id,
     });
 
     const isComment: any = await comment.save();
