@@ -9,6 +9,7 @@ interface BlogSchema extends Document {
   meta_title: string;
   meta_description: string;
   tags: ObjectId[];
+  category: ObjectId[];
   comment: ObjectId[];
   author: ObjectId;
   isTitleUnique: (title: string) => Promise<boolean>;
@@ -55,6 +56,13 @@ const blogSchema = new Schema<BlogSchema>(
       {
         type: Schema.Types.ObjectId,
         ref: "Tag",
+      },
+    ],
+
+    category: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Category",
       },
     ],
 

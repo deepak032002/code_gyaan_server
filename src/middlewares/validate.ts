@@ -6,7 +6,7 @@ const validate = (schema: Joi.ObjectSchema) => {
     const validate = schema.validate(req.body);
 
     if (validate.error)
-      return res.status(400).send(validate.error?.details[0].message);
+      return res.status(400).send(validate.error.details);
     next();
   };
 };

@@ -26,9 +26,8 @@ const getBlogs = async (req: Request, res: Response) => {
 
 const postBlog = async (req: Request, res: Response) => {
   try {
-    let tags: string[] = ["64310980a8aad559ca474641"];
-
-    const { title, content, description, meta_title, meta_description } =
+    console.log(req.body, req.file, "----------------");
+    const { title, content, description, tags, meta_title, meta_description } =
       req.body;
 
     if (content) {

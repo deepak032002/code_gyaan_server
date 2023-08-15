@@ -1,21 +1,35 @@
 import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import multer from "multer";
-
+import type { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary'
+import streamifier from 'streamifier'
+import sharp from 'sharp'
 cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME as string,
-  api_key: process.env.API_KEY as string,
-  api_secret: process.env.API_SECRET as string,
+    cloud_name: process.env.CLOUD_NAME as string,
+    api_key: process.env.API_KEY as string,
+    api_secret: process.env.API_SECRET as string,
 });
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "code_gyaan",
-    public_id: (req, file) => "",
-  },
-});
+const uploadImage = async (file: Express.Multer.File) => {
+    return new Promise<UploadApiResponse | UploadApiErrorResponse>((resolve, reject) => {
+        let cld_upload_stream = cloudinary.uploader.upload_stream(
+            {
+                folder: "code_gyaan",
+                public_id: file.originalname.split('.')[0] + "_codegyaan"
+            },
+            (error, result) => {
 
-const upload = multer({ storage: storage });
+                if (result) {
+                    resolve(result);
+                } else {
+                    reject(error);
+                }
+            }
+        );
 
-export default upload;
+        sharp(file.buffer).webp({ quality: 20 }).toBuffer().then(buffer => {
+            streamifier.createReadStream(buffer).pipe(cld_upload_stream);
+        })
+    });
+}
+
+export default uploadImage
+

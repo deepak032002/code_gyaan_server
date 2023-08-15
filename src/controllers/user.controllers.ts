@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import User from '../db/models/user.model'
 import jwt from 'jsonwebtoken'
 import { AuthenticatedRequest } from '../types/express'
+import uploadImage from '../middlewares/uploadImage'
 const JWT_SECRET = process.env.SECRET_PHRASE as string
 
 export const userGet = async (req: Request, res: Response) => {
@@ -17,23 +18,29 @@ export const userGet = async (req: Request, res: Response) => {
 export const signup = async (req: Request, res: Response) => {
   try {
     const { name, email, mobile, password } = req.body
-    const isEmailExist = await User.findOne({ where: { email: email } })
+    const isEmailExist = await User.findOne({ email: email })
 
-    if (isEmailExist) return res.status(400).send({ message: 'email already exist!', success: false })
+    if (isEmailExist) return res.status(400).send({ message: 'Email already exist!', success: false })
+    const resImage = await uploadImage(req.file as Express.Multer.File)
 
     const obj = {
       name,
       email,
       mobile,
       password,
-      avtar: req.file?.path
+      avtar: resImage.secure_url
     }
 
+
     const userdata = new User(obj)
-
     await userdata.save()
+    return res.status(200).send({ message: 'Successfully Created!', success: true })
 
-    res.status(200).send({ message: 'Successfully Created!', userdata })
+    // if (userdata) {
+    //   const image = (await resImage).secure_url;
+    //   await User.findByIdAndUpdate(userdata._id, { avtar: image })
+    // }
+
   } catch (error) {
     console.log(error)
     return res.status(500).send({ message: 'Something went wrong!', error })
