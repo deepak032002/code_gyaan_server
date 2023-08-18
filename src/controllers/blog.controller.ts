@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Blog from "../db/models/blog.model";
 import Comment from "../db/models/comment.model";
 import { AuthenticatedRequest } from "../types/express";
+import uploadImage from "../middlewares/uploadImage";
 
 const getBlogs = async (req: Request, res: Response) => {
   try {
@@ -26,21 +27,32 @@ const getBlogs = async (req: Request, res: Response) => {
 
 const postBlog = async (req: Request, res: Response) => {
   try {
-    console.log(req.body, req.file, "----------------");
-    const { title, content, description, tags, meta_title, meta_description } =
-      req.body;
+    const {
+      title,
+      content,
+      description,
+      tags,
+      category,
+      meta_title,
+      meta_description,
+    } = req.body;
+    const banner = await uploadImage(req.file as Express.Multer.File);
 
-    if (content) {
+    if (!banner.secure_url) {
+      return res
+        .status(400)
+        .send({ message: "Something went wrong with banner upload!" });
     }
 
     const blog = new Blog({
       title,
       content,
       description,
-      tags,
+      tags: typeof tags === "string" ? JSON.parse(tags) : tags,
       meta_title,
+      category: category,
       meta_description,
-      banner: req.file?.path,
+      banner: banner.secure_url,
       author: (req as AuthenticatedRequest).user.id,
     });
 
@@ -74,7 +86,7 @@ const patchBlog = async (req: Request, res: Response) => {
     const isUpdateBlog = await Blog.findOneAndUpdate(
       { slug: req.params.slug },
       req.body,
-      { new: true }
+      { new: true },
     ).exec();
 
     if (!isUpdateBlog) {

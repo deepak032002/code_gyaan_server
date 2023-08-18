@@ -17,7 +17,7 @@ export const blogValidateSchema = joi.object().keys({
   description: joi.string().required(),
   meta_title: joi.string().required(),
   meta_description: joi.string().required(),
-  tags: joi.any().required(),
+  tags: joi.array().required(),
   content: joi.string().required(),
   category: joi.string().required(),
 });

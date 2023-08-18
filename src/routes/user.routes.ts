@@ -6,7 +6,7 @@ import { userValidateSchema } from "../utils/joi.schema";
 import multer from "multer";
 const router = Router();
 
-router.use(multer().single('avtar'))
+router.use(multer().single("avtar"));
 
 router.route("/").get(verifyToken, userGet);
 router.route("/signup").post(validate(userValidateSchema), signup);

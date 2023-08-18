@@ -1,35 +1,38 @@
 import { v2 as cloudinary } from "cloudinary";
-import type { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary'
-import streamifier from 'streamifier'
-import sharp from 'sharp'
+import type { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
+import streamifier from "streamifier";
+import sharp from "sharp";
 cloudinary.config({
-    cloud_name: process.env.CLOUD_NAME as string,
-    api_key: process.env.API_KEY as string,
-    api_secret: process.env.API_SECRET as string,
+  cloud_name: process.env.CLOUD_NAME as string,
+  api_key: process.env.API_KEY as string,
+  api_secret: process.env.API_SECRET as string,
 });
 
 const uploadImage = async (file: Express.Multer.File) => {
-    return new Promise<UploadApiResponse | UploadApiErrorResponse>((resolve, reject) => {
-        let cld_upload_stream = cloudinary.uploader.upload_stream(
-            {
-                folder: "code_gyaan",
-                public_id: file.originalname.split('.')[0] + "_codegyaan"
-            },
-            (error, result) => {
+  return new Promise<UploadApiResponse | UploadApiErrorResponse>(
+    (resolve, reject) => {
+      let cld_upload_stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "code_gyaan",
+          public_id: file.originalname.split(".")[0] + "_codegyaan",
+        },
+        (error, result) => {
+          if (result) {
+            resolve(result);
+          } else {
+            reject(error);
+          }
+        },
+      );
 
-                if (result) {
-                    resolve(result);
-                } else {
-                    reject(error);
-                }
-            }
-        );
+      sharp(file.buffer)
+        .webp({ quality: 20 })
+        .toBuffer()
+        .then((buffer) => {
+          streamifier.createReadStream(buffer).pipe(cld_upload_stream);
+        });
+    },
+  );
+};
 
-        sharp(file.buffer).webp({ quality: 20 }).toBuffer().then(buffer => {
-            streamifier.createReadStream(buffer).pipe(cld_upload_stream);
-        })
-    });
-}
-
-export default uploadImage
-
+export default uploadImage;

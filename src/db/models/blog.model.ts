@@ -79,7 +79,7 @@ const blogSchema = new Schema<BlogSchema>(
     },
   },
 
-  { timestamps: true }
+  { timestamps: true },
 );
 
 blogSchema.methods.isTitleUnique = async (title: string) => {
@@ -99,19 +99,16 @@ blogSchema.pre("save", function (next) {
   next();
 });
 
-blogSchema.pre(
-  ["findOneAndUpdate", "updateOne"],
-  function (next) {
-    this.set(
-      "slug",
-      this.get("title")
-        .replace(/[^\w\s]/g, "")
-        .replace(/\s+/g, "-")
-        .toLowerCase()
-    );
-    next();
-  }
-);
+blogSchema.pre(["findOneAndUpdate", "updateOne"], function (next) {
+  this.set(
+    "slug",
+    this.get("title")
+      .replace(/[^\w\s]/g, "")
+      .replace(/\s+/g, "-")
+      .toLowerCase(),
+  );
+  next();
+});
 
 const Blog = model("Blog", blogSchema);
 

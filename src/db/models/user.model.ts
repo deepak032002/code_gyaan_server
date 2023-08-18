@@ -38,7 +38,7 @@ const userSchema = new Schema<UserSchema>(
       default: "user",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userSchema.methods.comparePassword = async function (password: string) {

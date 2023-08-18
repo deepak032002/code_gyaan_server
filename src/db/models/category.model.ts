@@ -7,7 +7,7 @@ const CategorySchema = new Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Category = model("Category", CategorySchema);

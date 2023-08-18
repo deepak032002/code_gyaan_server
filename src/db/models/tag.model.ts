@@ -7,7 +7,7 @@ const TagSchema = new Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Tag = model("Tag", TagSchema);
