@@ -7,36 +7,48 @@ import {
   getBlogBySlug,
   comment,
   uploadImageController,
+  publishBlog,
 } from "../controllers/blog.controller";
 import { validate, verifyRole, verifyToken } from "../middlewares";
 import { blogValidateSchema } from "../utils/joi.schema";
 import multer from "multer";
 
 const router = Router();
-router.use(multer().single("banner"));
+
 router
   .route("/")
   .get(getBlogs)
   .post(
     verifyToken,
     verifyRole("writer", "admin"),
+    multer().single("banner"),
     validate(blogValidateSchema),
     postBlog,
   );
 
 router
   .route("/:slug")
-  .patch(verifyToken, verifyRole("writer", "admin"), patchBlog)
+  .patch(
+    verifyToken,
+    verifyRole("writer", "admin"),
+    multer().single("banner"),
+    patchBlog,
+  )
   .put(
     verifyToken,
     verifyRole("writer", "admin"),
+    multer().single("banner"),
     validate(blogValidateSchema),
     patchBlog,
   )
   .delete(verifyToken, verifyRole("writer", "admin"), deleteBlog)
   .get(getBlogBySlug);
 
-router.route("/upload-image").post(verifyToken, uploadImageController);
+router.route('/publish-blog/:id').patch(verifyToken, verifyRole('writer', 'admin'), publishBlog)
+
+router
+  .route("/upload-image")
+  .post(verifyToken, multer().single("upload"), uploadImageController);
 
 router.route("/comment").post(verifyToken, comment);
 

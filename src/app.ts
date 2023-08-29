@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
@@ -25,6 +25,10 @@ app.get("/", (req, res) => {
 });
 app.use((req, res) => {
   res.status(404).send({ msg: "route not found" });
+});
+
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  res.status(500).send({ message: err.message, stack: err.stack });
 });
 
 export default app;

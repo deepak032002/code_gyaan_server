@@ -11,7 +11,14 @@ export const userGet = async (req: Request, res: Response) => {
       (req as AuthenticatedRequest).user.id,
     ).select("-password");
 
-    return res.status(200).send({ message: "Success", userData });
+    if (!userData)
+      return res
+        .status(404)
+        .send({ message: "Message not found", success: false });
+
+    return res
+      .status(200)
+      .send({ message: "Successfully data got!", userData });
   } catch (error) {
     return res
       .status(500)
@@ -28,20 +35,24 @@ export const signup = async (req: Request, res: Response) => {
       return res
         .status(400)
         .send({ message: "Email already exist!", success: false });
-    const resImage = await uploadImage(req.file as Express.Multer.File);
+
+    let resImage;
+    if (req.file) {
+      resImage = await uploadImage(req.file as Express.Multer.File);
+    }
 
     const obj = {
       name,
       email,
       mobile,
       password,
-      avtar: resImage.secure_url,
+      avtar: resImage?.secure_url,
     };
 
     const userdata = new User(obj);
     await userdata.save();
     return res
-      .status(200)
+      .status(201)
       .send({ message: "Successfully Created!", success: true });
 
     // if (userdata) {

@@ -7,14 +7,14 @@ cloudinary.config({
   api_key: process.env.API_KEY as string,
   api_secret: process.env.API_SECRET as string,
 });
-
 const uploadImage = async (file: Express.Multer.File) => {
   return new Promise<UploadApiResponse | UploadApiErrorResponse>(
     (resolve, reject) => {
       let cld_upload_stream = cloudinary.uploader.upload_stream(
         {
-          folder: "code_gyaan",
-          public_id: file.originalname.split(".")[0] + "_codegyaan",
+          folder: process.env.CLOUD_UPLOAD_FOLDER,
+          public_id:
+            file.originalname.split(".")[0].split(" ").join("_") + "_codegyaan",
         },
         (error, result) => {
           if (result) {

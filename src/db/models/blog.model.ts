@@ -9,9 +9,11 @@ interface BlogSchema extends Document {
   meta_title: string;
   meta_description: string;
   tags: ObjectId[];
-  category: ObjectId[];
+  category: ObjectId;
   comment: ObjectId[];
   author: ObjectId;
+  is_deleted: boolean;
+  is_published: boolean;
   isTitleUnique: (title: string) => Promise<boolean>;
 }
 
@@ -59,12 +61,10 @@ const blogSchema = new Schema<BlogSchema>(
       },
     ],
 
-    category: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Category",
-      },
-    ],
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+    },
 
     comment: [
       {
@@ -76,6 +76,16 @@ const blogSchema = new Schema<BlogSchema>(
     author: {
       type: Schema.Types.ObjectId,
       ref: "User",
+    },
+
+    is_deleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    is_published: {
+      type: Boolean,
+      default: false,
     },
   },
 
@@ -92,14 +102,18 @@ blogSchema.methods.isTitleUnique = async (title: string) => {
 };
 
 blogSchema.pre("save", function (next) {
+  if (!this.title) return next();
   this.slug = this.title
     .replace(/[^\w\s]/g, "")
     .replace(/\s+/g, "-")
     .toLowerCase();
+
   next();
 });
 
 blogSchema.pre(["findOneAndUpdate", "updateOne"], function (next) {
+
+  if (!this.get('title')) return next()
   this.set(
     "slug",
     this.get("title")

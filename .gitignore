@@ -1,7 +1,7 @@
 node_modules
 .env*
 build
-__test__
+__tests__
 yarn.lock
 yarn-error.log
 coverage

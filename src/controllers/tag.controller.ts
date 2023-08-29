@@ -15,6 +15,7 @@ export const addTag = async (req: Request, res: Response) => {
 
     return res.status(200).send({ tag });
   } catch (error) {
+    console.log(error);
     return res.status(500).send("Internal Server Error");
   }
 };
@@ -35,9 +36,14 @@ export const getTagbyId = async (req: Request, res: Response) => {
   try {
     const tag = await Tag.findById(req.params.id);
 
-    if (!tag) return res.status(400).send("Something went wrong");
+    if (!tag)
+      return res
+        .status(400)
+        .send({ message: "Something went wrong", success: false });
 
-    return res.status(200).send({ tag });
+    return res
+      .status(200)
+      .send({ message: "Successfully get all tags", success: true, tag });
   } catch (error) {
     return res.status(500).send("Internal Server Error");
   }
