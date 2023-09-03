@@ -1,6 +1,6 @@
-import mongoose, { Schema, model, Document, ObjectId } from "mongoose";
+import mongoose, { Schema, model, ObjectId, Model } from "mongoose";
 
-interface BlogSchema extends Document {
+interface BlogSchema {
   title: string;
   description: string;
   content: string;
@@ -14,10 +14,14 @@ interface BlogSchema extends Document {
   author: ObjectId;
   is_deleted: boolean;
   is_published: boolean;
+  // isTitleUnique: (title: string) => Promise<boolean>;
+}
+
+interface BlogModel extends Model<BlogSchema> {
   isTitleUnique: (title: string) => Promise<boolean>;
 }
 
-const blogSchema = new Schema<BlogSchema>(
+const blogSchema = new Schema<BlogSchema, BlogModel>(
   {
     title: {
       type: String,
@@ -92,14 +96,14 @@ const blogSchema = new Schema<BlogSchema>(
   { timestamps: true },
 );
 
-blogSchema.methods.isTitleUnique = async (title: string) => {
+blogSchema.static('isTitleUnique', async function (title: string) {
   try {
-    return await mongoose.model("Blog").findOne({ title });
+    return await this.findOne({ title: { $regex: new RegExp(title, 'i') } })
   } catch (error) {
     console.log(error);
-    throw new Error("Something went wrong!");
+    throw new Error("Something went wrong!")
   }
-};
+})
 
 blogSchema.pre("save", function (next) {
   if (!this.title) return next();
@@ -124,6 +128,8 @@ blogSchema.pre(["findOneAndUpdate", "updateOne"], function (next) {
   next();
 });
 
-const Blog = model("Blog", blogSchema);
+blogSchema.index({ title: 'text', _id: 'text' })
+
+const Blog = model<BlogSchema, BlogModel>("Blog", blogSchema);
 
 export default Blog;

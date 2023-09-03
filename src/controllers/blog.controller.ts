@@ -6,19 +6,30 @@ import uploadImage from "../middlewares/uploadImage";
 
 const getBlogs = async (req: Request, res: Response) => {
   try {
-    const totalItem = await Blog.countDocuments();
     const page = parseInt(req.query.page as string) || 1;
     const itemPerPage = parseInt(req.query.item_per_page as string) || 10;
-    const totalPage = Math.ceil(totalItem / itemPerPage);
 
-    const blogData = await Blog.find({ is_deleted: { $eq: false } })
+    let condition = {
+      is_deleted: false,
+      $or: [
+        { title: { $regex: req.query.search as string, $options: 'i' } }
+        // Add additional conditions here if needed
+      ]
+    }
+
+    const blogData = await Blog.find(condition)
       .select("-is_deleted")
       .populate("author", "name email avtar")
       .populate("tags", "name")
       .populate("comment", "name email content")
       .populate("category", "name")
       .skip((page - 1) * itemPerPage)
-      .limit(itemPerPage);
+      .limit(itemPerPage)
+      .sort({ createdAt: -1 })
+
+
+    const totalItem = await Blog.countDocuments(condition)
+    const totalPage = Math.ceil(totalItem / itemPerPage);
 
     if (blogData.length === 0) {
       return res
@@ -74,6 +85,12 @@ const postBlog = async (req: Request, res: Response) => {
         .send({ message: "Something went wrong with banner upload!" });
     }
 
+    const isUnique = await Blog.isTitleUnique(title);
+
+    if (isUnique) {
+      return res.status(400).send({ message: "Title already exists!" });
+    }
+
     const blog = new Blog({
       title,
       content,
@@ -85,12 +102,6 @@ const postBlog = async (req: Request, res: Response) => {
       banner: banner.secure_url,
       author: (req as AuthenticatedRequest).user.id,
     });
-
-    const isUnique = await blog.isTitleUnique(title);
-
-    if (isUnique) {
-      return res.status(400).send({ message: "Title already exists!" });
-    }
 
     const isBlog = await blog.save();
 
@@ -117,6 +128,14 @@ const patchBlog = async (req: Request, res: Response) => {
 
     if (req.file) {
       banner = await uploadImage(req.file as Express.Multer.File);
+    }
+
+    if (req.body.title) {
+      const isUnique = await Blog.isTitleUnique(req.body.title);
+
+      if (isUnique) {
+        return res.status(400).send({ message: "Title already exists!" });
+      }
     }
 
     const isUpdateBlog = await Blog.findOneAndUpdate(
@@ -173,14 +192,15 @@ const getBlogBySlug = async (req: Request, res: Response) => {
       .select("-is_deleted -is_published")
       .populate("author", "name email avtar")
       .populate("tags", "name")
-      .populate("comment", "name email content");
+      .populate("comment", "name email content")
+      .populate("category", "name")
 
     if (!blogData) {
       return res
         .status(500)
-        .send({ message: "Blog not found", result: blogData });
+        .send({ message: "Blog not found", results: {} });
     }
-    return res.status(200).send({ message: "Success", result: blogData });
+    return res.status(200).send({ message: "Success", results: blogData });
   } catch (error) {
     return res
       .status(500)
@@ -235,13 +255,13 @@ const uploadImageController = async (req: Request, res: Response) => {
 
 const publishBlog = async (req: Request, res: Response) => {
   try {
-    const blogById = await Blog.findById(req.body.id)
+    const blogById = await Blog.findById(req.params.id)
     if (!blogById) return res.status(404).send({ message: 'Blog Not found', success: false })
+    const isPublish = !blogById?.is_published
+    blogById.is_published = isPublish
 
-    blogById.is_published = !blogById?.is_published
-    
     await blogById.save()
-    return res.status(200).send({ message: "Successfully published!", success: true });
+    return res.status(200).send({ message: `Successfully ${isPublish ? "published!" : "unpublished!"}`, success: true });
   } catch (error) {
     console.log(error);
     return res.status(500).send("Something went wrong!");
