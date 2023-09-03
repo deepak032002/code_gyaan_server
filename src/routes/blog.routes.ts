@@ -8,6 +8,7 @@ import {
   comment,
   uploadImageController,
   publishBlog,
+  getAllPublishBlog,
 } from "../controllers/blog.controller";
 import { validate, verifyRole, verifyToken } from "../middlewares";
 import { blogValidateSchema } from "../utils/joi.schema";
@@ -17,7 +18,11 @@ const router = Router();
 
 router
   .route("/")
-  .get(getBlogs)
+  .get(
+    verifyToken,
+    verifyRole("writer", "admin"),
+    getBlogs
+  )
   .post(
     verifyToken,
     verifyRole("writer", "admin"),
@@ -25,6 +30,8 @@ router
     validate(blogValidateSchema),
     postBlog,
   );
+
+router.route('/getPublishBlog').get(getAllPublishBlog)
 
 router
   .route("/:slug")

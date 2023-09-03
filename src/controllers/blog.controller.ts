@@ -12,7 +12,7 @@ const getBlogs = async (req: Request, res: Response) => {
     let condition = {
       is_deleted: false,
       $or: [
-        { title: { $regex: req.query.search as string, $options: 'i' } }
+        { title: { $regex: req.query.search || "", $options: 'i' } }
         // Add additional conditions here if needed
       ]
     }
@@ -30,6 +30,18 @@ const getBlogs = async (req: Request, res: Response) => {
 
     const totalItem = await Blog.countDocuments(condition)
     const totalPage = Math.ceil(totalItem / itemPerPage);
+
+    if(page > totalPage){
+      return res
+        .status(200)
+        .send({
+          message: "Page Not available",
+          results: blogData,
+          totalItem,
+          page: page,
+          totalPage,
+        });
+    }
 
     if (blogData.length === 0) {
       return res
@@ -60,6 +72,76 @@ const getBlogs = async (req: Request, res: Response) => {
       .send({ message: "Something went wrong!", error, success: false });
   }
 };
+
+const getAllPublishBlog = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const itemPerPage = parseInt(req.query.item_per_page as string) || 10;
+
+    let condition = {
+      is_deleted: false,
+      is_published: true,
+      $or: [
+        { title: { $regex: req.query.search || "", $options: 'i' } }
+        // Add additional conditions here if needed
+      ]
+    }
+
+    const blogData = await Blog.find(condition)
+      .select("-is_deleted -is_published")
+      .populate("author", "name email avtar")
+      .populate("tags", "name")
+      .populate("comment", "name email content")
+      .populate("category", "name")
+      .skip((page - 1) * itemPerPage)
+      .limit(itemPerPage)
+      .sort({ createdAt: -1 })
+
+
+    const totalItem = await Blog.countDocuments(condition)
+    const totalPage = Math.ceil(totalItem / itemPerPage);
+
+    if(page > totalPage){
+      return res
+        .status(200)
+        .send({
+          message: "Page Not available",
+          results: blogData,
+          totalItem,
+          page: page,
+          totalPage,
+        });
+    }
+
+    if (blogData.length === 0) {
+      return res
+        .status(200)
+        .send({
+          message: "No Blogs Found",
+          results: blogData,
+          totalItem,
+          page: page,
+          totalPage,
+        });
+    }
+
+    return res
+      .status(200)
+      .send({
+        message: "Success",
+        results: blogData,
+        totalItem,
+        page: page,
+        totalPage,
+      });
+  } catch (error) {
+    console.log(error);
+
+    return res
+      .status(500)
+      .send({ message: "Something went wrong!", error, success: false });
+  }
+}
 
 const postBlog = async (req: Request, res: Response) => {
   try {
@@ -276,5 +358,6 @@ export {
   getBlogBySlug,
   comment,
   uploadImageController,
-  publishBlog
+  publishBlog,
+  getAllPublishBlog
 };
