@@ -4,7 +4,7 @@
     "transpileOnly": true,
     "files": true
   },
-  "include": ["src", "express.d.ts", "../codegyaan_admin/src/utils/formDataSerializer.ts"],
+  "include": ["src", "express.d.ts"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
