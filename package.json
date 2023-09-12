@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "set NODE_VERSION=16.19.1 && yarn && npx tsc",
-    "build:start": "set NODE_ENV=production && node build/src/index.js",
+    "build:start": "set NODE_ENV=production && node build/index.js",
     "start": "set NODE_ENV=production && ts-node src/index.ts",
     "dev": " set NODE_ENV=development && nodemon src/index.ts",
     "test": "jest"
